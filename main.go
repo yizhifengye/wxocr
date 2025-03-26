@@ -10,6 +10,10 @@ import (
 	"os"
 )
 
+const (
+	imageName = "WX20250326-121647"
+)
+
 // OCRRequest 用于请求体中的图像字段
 type OCRRequest struct {
 	Image string `json:"image"`
@@ -65,7 +69,10 @@ func ocrRecognize(imagePath string, imageUrl string, apiUrl string) (*OCRRespons
 
 	// 转换为 base64
 	base64Image := base64.StdEncoding.EncodeToString(imgData)
+	return ocrRecognizeBase64(base64Image, apiUrl)
+}
 
+func ocrRecognizeBase64(base64Image string, apiUrl string) (*OCRResponse, error) {
 	// 构造 JSON 请求
 	reqBody, err := json.Marshal(OCRRequest{Image: base64Image})
 	if err != nil {
@@ -95,7 +102,7 @@ func ocrRecognize(imagePath string, imageUrl string, apiUrl string) (*OCRRespons
 	// 打印结果
 	fmt.Println("OCR识别结果:")
 	for _, result := range ocrResponse.Result.OCRResponse {
-		fmt.Printf("Text: %s\n", result.Text)
+		fmt.Printf("\"%s\" (%.0f,%.0f,%.0f,%.0f) %.1f%%\n", result.Text, result.Left, result.Right, result.Top, result.Bottom, result.Rate*100)
 	}
 
 	// 返回解析后的 OCRResponse
@@ -104,13 +111,10 @@ func ocrRecognize(imagePath string, imageUrl string, apiUrl string) (*OCRRespons
 
 func main() {
 	apiUrl := "http://192.168.31.106:5000/ocr"
-	imagePath := "/Users/ace/Downloads/WX20250326-105535.png"
-	ocrResponse, err := ocrRecognize(imagePath, "", apiUrl)
+	imagePath := fmt.Sprintf("/Users/ace/Downloads/%s.png", imageName)
+	_, err := ocrRecognize(imagePath, "", apiUrl)
 	if err != nil {
 		fmt.Println("错误:", err)
 		return
 	}
-
-	// 打印整个 OCRResponse 结构体
-	fmt.Printf("完整响应： %+v\n", ocrResponse)
 }
